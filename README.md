@@ -1,183 +1,315 @@
-# Bosquejo a imagen (Pix2Pix) con botas
+# Bosquejo a Imagen
 
-Miniproyecto 3 de Redes Generativas · Universidad Autónoma de Occidente
+Proyecto de modelos generativos basado en **Pix2Pix**, cuyo objetivo es transformar bocetos en imágenes realistas mediante una arquitectura de redes neuronales compuesta por un generador U-Net y un discriminador PatchGAN.
 
-Modelo generativo que convierte un **bosquejo de líneas** en la **foto de una bota**. Usa Pix2Pix (GAN condicional) implementado en TensorFlow/Keras: un generador **U-Net** y un discriminador **PatchGAN**, entrenados desde cero con un dataset armado por el grupo.
+## 1. Estructura del proyecto
 
----
+Los archivos principales son:
 
-## Archivos pesados (Google Drive)
-
-GitHub no admite archivos de más de 100 MB, por eso estos archivos están en Drive:
-
-- **Dataset de pares boceto/foto (`pares.zip`):** https://drive.google.com/drive/folders/1bw8UdkC-Fo-0d2DkEVfvrKDvFil_Jesh?usp=sharing
-- **Carpeta `bosquejo-a-imagen` completa (checkpoints, muestras, `perdidas.csv`, resultados, curvas y validación):** https://drive.google.com/drive/folders/1nr2pkG2iAFvPv1a3cCx5ZnjzQ_4goVeT?usp=sharing
-- **Cuaderno de Colab usado para entrenar:** https://colab.research.google.com/drive/1YAK9VNaVkata8bEQkIR-X1IgxiwaHIm5?usp=sharing (Importante cambiar las carpetas o dejarlas tal cual como están en cada celda de codigo)
-** NOTA: Si se necesita solamente revisar el modelo, se debe clonar el repositorio y tener las carpetas de data y bosquejo-a-imagen (se descomprimen dentro del repositorio clonado localmente) **
-
----
-
-## Contenido del repositorio
-
-| Archivo | Para qué sirve |
+| Archivo | Función |
 |---|---|
-| `01-crear-dataset.py` | Convierte 1000 fotos de botas en pares boceto/foto de 256×256 (bocetos con Canny). Separa 900 pares en `train` y 100 en `test`. |
-| `cargar_datos.py` | Lee los pares del disco, aplica aumento de datos (jitter y volteo), normaliza a [-1, 1] y arma el `tf.data.Dataset`. Lo importan 04 y 05. |
-| `modelo.py` | Define el generador (U-Net, 54.4 M de parámetros) y el discriminador (PatchGAN, 2.77 M). Lo importan 04, 05 y `demo.py`. |
-| `04-entrenar.py` | Entrena 40 épocas, guarda muestras, pesos y `perdidas.csv`. Retoma desde el último checkpoint si se interrumpe. |
-| `05-validar.py` | Calcula L1, PSNR y SSIM sobre los 100 pares de test y genera la cuadrícula de comparación y las curvas de pérdida. |
-| `demo.py` | Demo en vivo con Gradio: se sube una imagen y el modelo genera la bota. |
-| `requirements.txt` | Dependencias del proyecto. |
+| `cargar_datos.py` | Carga las imágenes, aplica aumentación de datos y prepara los conjuntos de entrenamiento y prueba. |
+| `modelo.py` | Define el generador U-Net y el discriminador PatchGAN. |
+| `04-entrenar.py` | Entrena el modelo y guarda sus pesos, muestras y pérdidas. |
+| `05-validar.py` | Evalúa el modelo mediante métricas y genera comparaciones y gráficas. |
+| `demo.py` | Permite utilizar el modelo mediante una interfaz de Gradio. |
+| `pares.zip` | Contiene el conjunto de imágenes emparejadas para entrenar y probar el modelo. |
 
-> `modelo.py` y `cargar_datos.py` no se ejecutan solos: los importan los demás scripts, así que deben estar en la misma carpeta.
+### Estructura esperada de los datos
 
----
+El archivo `pares.zip` contiene directamente las carpetas `train` y `test`. Cada una contiene dos carpetas: `boceto` y `foto`.
 
-## Dataset
+La estructura que debe tener el proyecto después de organizar los datos es:
 
-- Fotos de la categoría **Boots** de [UT Zappos50K](https://vision.cs.utexas.edu/projects/finegrained/utzap50k/).
-- Se eligieron **1000 fotos al azar** (semilla 42), se recortaron al centro y se redujeron a **256×256**.
-- El bosquejo de cada foto se genera con **Canny** (desenfoque gaussiano 5×5, umbrales 50 y 150), con líneas negras sobre fondo blanco.
-- División: **900 pares de entrenamiento** y **100 de prueba**.
-
----
-
-## Cómo ejecutarlo
-
-### 1. Instalar dependencias
-
-```bash
-python -m venv venv
-venv\Scripts\activate        # Windows
-# source venv/bin/activate   # Linux / Mac
-pip install -r requirements.txt
+```text
+bosquejo-a-imagen/
+│
+├── 04-entrenar.py
+├── 05-validar.py
+├── cargar_datos.py
+├── modelo.py
+├── demo.py
+├── pares.zip
+│
+├── data/
+│   └── pares/
+│       ├── train/
+│       │   ├── boceto/
+│       │   └── foto/
+│       │
+│       └── test/
+│           ├── boceto/
+│           └── foto/
+│
+└── resultados/
+    ├── checkpoints/
+    │   └── generador.weights.h5
+    ├── perdidas.csv
+    ├── validacion_comparacion.png
+    └── curvas_perdida.png
 ```
 
-`requirements.txt` debe incluir al menos: `tensorflow`, `numpy`, `opencv-python`, `matplotlib`, `gradio`.
+**Importante:** el ZIP no contiene una carpeta llamada `pares`. Por eso, después de extraerlo, es necesario crear `data/pares` y colocar dentro las carpetas `train` y `test`. Esta organización es necesaria porque `cargar_datos.py` busca los datos en esa ubicación.
 
-### 2. Preparar los datos
+## 2. Instalación de dependencias
 
-**Opción A: usar el dataset ya creado.** Descarga `pares.zip` del enlace de Drive y descomprímelo. Crea la carpeta "data", y dentro de ella pega pares.zip descomprimido, de modo que quede `data/pares/train/` y `data/pares/test/` (cada una con `boceto/` y `foto/`).
+Para ejecutar el proyecto localmente, se recomienda utilizar un entorno virtual de Python.
 
-**Opción B: crearlo desde cero.** Descarga UT Zappos50K, copia la carpeta `Boots` a `data/originales/Boots` y ejecuta:
+Instalar las dependencias:
 
 ```bash
-python 01-crear-dataset.py
+pip install tensorflow numpy opencv-python matplotlib gradio
 ```
 
-### 3. Entrenar
+En Google Colab, TensorFlow suele estar disponible en el entorno. Gradio también debe estar instalado para ejecutar la demostración; si no está disponible, puede instalarse con:
+
+```python
+!pip install gradio
+```
+
+## 3. Preparación del conjunto de datos
+
+Antes de entrenar, se debe extraer `pares.zip` y organizar las carpetas de la siguiente manera:
+
+```text
+data/
+└── pares/
+    ├── train/
+    │   ├── boceto/
+    │   └── foto/
+    │
+    └── test/
+        ├── boceto/
+        └── foto/
+```
+
+- `train`: contiene los pares de imágenes utilizados para entrenar el modelo.
+- `test`: contiene los pares reservados para evaluar el rendimiento del modelo.
+
+El conjunto de datos utilizado está compuesto por 1000 pares de imágenes: 900 para entrenamiento y 100 para prueba.
+
+## 4. Entrenamiento del modelo
+
+El entrenamiento se realiza mediante `04-entrenar.py`.
+
+Este script utiliza los datos de entrenamiento para que el generador aprenda a transformar bocetos en imágenes. El discriminador participa en el proceso comparando las imágenes generadas con las imágenes reales.
+
+El entrenamiento está configurado para 40 épocas.
+
+Durante este proceso se guardan:
+- Los pesos del generador y los checkpoints correspondientes.
+- Las muestras de imágenes generadas durante el entrenamiento.
+- El archivo `perdidas.csv`, que contiene información de las pérdidas del modelo.
+
+El entrenamiento puede reanudarse desde el último checkpoint disponible cuando el código lo contempla.
+
+Para iniciar el entrenamiento localmente, ejecutar desde la carpeta principal del proyecto:
 
 ```bash
 python 04-entrenar.py
 ```
 
-Se recomienda hacerlo en **Google Colab con GPU (T4)**: en CPU cada época toma unos 13 a 14 minutos (≈ 9 horas en total), y en Colab unos 2 minutos (≈ 72 minutos en total).
-En tu carpeta de drive donde harás el entrenamiento (si se hace en collab) deben ir los .py de 04-entrenar.py, cargar_datos.py, modelo.py
+### Entrenamiento en Google Colab
 
-Los resultados quedan en `resultados/`. Para una prueba rápida, en `04-entrenar.py` usa `EPOCAS = 2` y `PASOS_PRUEBA = 20`.
+Se recomienda utilizar Google Colab con una GPU disponible, preferiblemente una Tesla T4.
 
-#### Entrenar en Google Colab
+**Paso 1. Conectar Google Drive**
 
 ```python
 from google.colab import drive
 drive.mount('/content/drive')
 ```
+
+**Paso 2. Preparar el proyecto y copiar los archivos**
+
+Se crea la carpeta de trabajo en Colab, se copian los scripts desde Drive y se extrae el conjunto de datos.
+
 ```python
 !mkdir -p /content/proyecto/data
 !cp /content/drive/MyDrive/bosquejo-a-imagen/*.py /content/proyecto/
 !unzip -q /content/drive/MyDrive/bosquejo-a-imagen/pares.zip -d /content/proyecto/data
 %cd /content/proyecto
-!ls data/pares
 ```
+
+**Paso 3. Organizar las carpetas del conjunto de datos**
+
+Como el ZIP contiene directamente `train` y `test`, se deben colocar dentro de `data/pares`.
+
+```python
+!mkdir -p /content/proyecto/data/pares
+!mv /content/proyecto/data/train /content/proyecto/data/pares/
+!mv /content/proyecto/data/test /content/proyecto/data/pares/
+```
+
+**Paso 4. Preparar la carpeta de resultados**
+
+Se crea la carpeta de resultados en Google Drive y se conecta con la carpeta de trabajo de Colab. De esta manera, los resultados del entrenamiento quedan almacenados en Drive.
+
 ```python
 !mkdir -p /content/drive/MyDrive/bosquejo-a-imagen/resultados
 !ln -s /content/drive/MyDrive/bosquejo-a-imagen/resultados /content/proyecto/resultados
 ```
+
+**Paso 5. Crear la ruta adicional utilizada por la validación**
+
+El script `05-validar.py` busca los resultados dentro de una carpeta llamada `bosquejo-a-imagen`. Para evitar errores de ubicación, se crea esa carpeta y se conecta con la misma carpeta de resultados de Drive.
+
+```python
+!mkdir -p /content/proyecto/bosquejo-a-imagen
+!ln -s /content/drive/MyDrive/bosquejo-a-imagen/resultados /content/proyecto/bosquejo-a-imagen/resultados
+```
+
+**Paso 6. Ejecutar el entrenamiento**
+
 ```python
 !python 04-entrenar.py
 ```
 
-### 4. Validar
+Al finalizar, los pesos y los resultados del entrenamiento estarán almacenados en Google Drive.
 
-Coloca los pesos entrenados (`generador.weights.h5`) en la carpeta `checkpoints` de resultados (descárgalos del Drive si no entrenaste tú) y ejecuta:
+## 5. Validación del modelo
 
-```bash
-python 05-validar.py
+Una vez terminado el entrenamiento, se ejecuta `05-validar.py`.
+
+Este script carga los pesos del generador y utiliza las imágenes del conjunto de prueba para evaluar la calidad de las imágenes producidas.
+
+Calcula las siguientes métricas:
+
+- **L1:** mide la diferencia promedio entre los píxeles de la imagen generada y la imagen real. Un valor menor indica menor diferencia.
+- **PSNR:** mide la relación entre la señal y el ruido de la imagen. Generalmente, un valor mayor indica una mejor reconstrucción.
+- **SSIM:** compara la similitud estructural entre las imágenes. Sus valores se interpretan entre 0 y 1; cuanto más cercano a 1, mayor similitud.
+
+También genera dos archivos:
+
+| Archivo | Contenido |
+|---|---|
+| `validacion_comparacion.png` | Presenta el boceto de entrada, la fotografía real y la imagen generada por el modelo. |
+| `curvas_perdida.png` | Muestra las curvas de pérdida del generador y del discriminador durante el entrenamiento. |
+
+Para ejecutar la validación en Google Colab, primero se copia el script desde Drive:
+
+```python
+!cp /content/drive/MyDrive/bosquejo-a-imagen/05-validar.py /content/proyecto/
 ```
 
-Genera `validacion_comparacion.png` y `curvas_perdida.png` y muestra las métricas en consola.
+Después se ejecuta:
 
-### 5. Demo en vivo
+```python
+!python 05-validar.py
+```
+
+Los resultados se guardan en la carpeta `resultados` de Google Drive.
+
+## 6. Demostración del modelo
+
+El archivo `demo.py` permite utilizar el modelo mediante una interfaz de Gradio.
+
+Su objetivo es facilitar la interacción con el generador: se proporciona un boceto como entrada y el modelo produce una imagen a partir de él.
+
+Para ejecutar la demostración localmente:
 
 ```bash
-pip install gradio
 python demo.py
 ```
 
-Abre el enlace local que aparece (`http://127.0.0.1:7860`). Se puede subir:
+En Google Colab, copiar el archivo desde Drive:
 
-- **Una foto de bota:** se convierte a boceto con Canny y el modelo genera la foto.
-- **Un boceto ya dibujado:** líneas negras sobre fondo blanco.
+```python
+!cp /content/drive/MyDrive/bosquejo-a-imagen/demo.py /content/proyecto/
+```
 
-`demo.py` busca los pesos en `resultados/checkpoints/generador.weights.h5` o en `bosquejo-a-imagen/resultados/checkpoints/generador.weights.h5`.
+Ejecutar la demostración:
+
+```python
+!python demo.py
+```
+
+La interfaz de Gradio permitirá cargar un boceto y observar el resultado generado.
+
+## 7. ¿Cómo utilizar un modelo ya entrenado sin volver a entrenarlo?
+
+**No es necesario ejecutar el entrenamiento cada vez que se quiera utilizar el modelo.**
+
+Una vez que el entrenamiento ha finalizado, se pueden reutilizar los pesos guardados para realizar demostraciones o generar nuevas imágenes.
+
+Para ello, es necesario conservar en Google Drive los archivos del modelo entrenado, especialmente:
+
+```text
+resultados/
+└── checkpoints/
+    └── generador.weights.h5
+```
+
+También se deben conservar los scripts necesarios para cargar el generador, como `modelo.py` y `demo.py`.
+
+### Utilizar el modelo previamente entrenado en Google Colab
+
+**Paso 1. Conectar Google Drive**
+
+```python
+from google.colab import drive
+drive.mount('/content/drive')
+```
+
+**Paso 2. Copiar los scripts necesarios**
+
+```python
+!mkdir -p /content/proyecto
+!cp /content/drive/MyDrive/bosquejo-a-imagen/*.py /content/proyecto/
+%cd /content/proyecto
+```
+
+**Paso 3. Conectar la carpeta de resultados**
+
+```python
+!ln -s /content/drive/MyDrive/bosquejo-a-imagen/resultados /content/proyecto/resultados
+!mkdir -p /content/proyecto/bosquejo-a-imagen
+!ln -s /content/drive/MyDrive/bosquejo-a-imagen/resultados /content/proyecto/bosquejo-a-imagen/resultados
+```
+
+**Paso 4. Ejecutar la demostración**
+
+```python
+!python demo.py
+```
+
+De esta manera, se utiliza el generador con los pesos que ya fueron entrenados, sin necesidad de ejecutar nuevamente `04-entrenar.py`.
+
+**Importante:** para esta demostración no es necesario extraer `pares.zip` ni ejecutar la validación. Solo se necesitan los scripts correspondientes y los pesos del modelo previamente entrenado.
+
+## 8. Resultados del proyecto
+
+Los resultados se almacenan en la carpeta `resultados`, que debe conservarse para poder utilizar posteriormente el modelo y consultar su rendimiento.
+
+Entre los archivos más importantes se encuentran:
+
+- `generador.weights.h5`: pesos del generador entrenado.
+- `perdidas.csv`: registro de las pérdidas durante el entrenamiento.
+- `validacion_comparacion.png`: comparación entre bocetos, fotografías reales e imágenes generadas.
+- `curvas_perdida.png`: gráficas de las pérdidas del modelo.
+
+Estos archivos permiten consultar el entrenamiento, evaluar el rendimiento y reutilizar el modelo sin necesidad de entrenarlo nuevamente.
 
 ---
 
-## Parámetros del experimento
+## 9. Consideraciones para Google Colab
 
-| Parámetro | Valor |
-|---|---|
-| Fotos usadas | 1000 (900 train / 100 test) |
-| Tamaño de imagen | 256×256 |
-| Épocas | 40 |
-| Batch size | 1 |
-| `LAMBDA_L1` | 100 |
-| Optimizador | Adam (lr = 2e-4, beta_1 = 0.5), uno por red |
-| Pérdida GAN | Entropía cruzada binaria (`from_logits=True`) |
-| Aumento de datos | Recorte aleatorio (286→256) y volteo horizontal |
-| Generador | U-Net, 54,425,859 parámetros |
-| Discriminador | PatchGAN 30×30, 2,770,433 parámetros |
+- Los archivos almacenados directamente en `/content/proyecto` son temporales y pueden desaparecer cuando se reinicia o termina la sesión de Colab.
+- Los resultados guardados en Google Drive permanecen disponibles.
+- Si se inicia una nueva sesión de Colab, es necesario volver a conectar Drive, copiar los scripts y crear nuevamente los accesos directos a la carpeta de resultados.
+- Si se desea entrenar desde cero en una sesión nueva, también se debe volver a extraer y organizar el conjunto de datos.
+- Si solamente se desea utilizar un modelo previamente entrenado, no es necesario cargar el conjunto de datos ni ejecutar el entrenamiento.
+- Se recomienda conservar los checkpoints y el archivo `perdidas.csv` para mantener el historial y poder continuar o analizar el entrenamiento.
 
----
+## 10. Orden general de ejecución
 
-## Resultados
-
-Métricas sobre los **100 pares de test** (imágenes que el modelo nunca vio al entrenar):
-
-| Medida | Generador | Referencia (boceto vs foto) |
+| Etapa | Archivo o acción | Objetivo |
 |---|---|---|
-| L1 en [-1, 1] | 0.117 | — |
-| L1 en [0, 1] | 0.058 | — |
-| PSNR | 19.73 dB | 7.73 dB |
-| SSIM | 0.748 | 0.636 |
+| Preparación | `cargar_datos.py` y `pares.zip` | Preparar los datos. |
+| Entrenamiento | `04-entrenar.py` | Entrenar el modelo y guardar sus pesos. |
+| Validación | `05-validar.py` | Evaluar el modelo y generar métricas y gráficas. |
+| Demostración | `demo.py` | Probar el modelo con nuevos bocetos. |
 
-Diferencia entre train y test (L1, 50 pares cada uno): **0.107 vs 0.122**, sin señales fuertes de sobreajuste.
+**Flujo recomendado:** preparar los datos → entrenar → validar → utilizar la demostración.
 
-![Comparación boceto, foto real y generada](imagenes/validacion_comparacion.png)
-
-![Curvas de pérdida](imagenes/curvas_perdida.png)
-
-**Observaciones:**
-
-- El modelo respeta bien la forma: siluetas, cordones, hebillas y patrones del boceto aparecen en la bota generada.
-- Las texturas son plausibles (cuero, piel, tela).
-- El **color es el punto débil**: un boceto de líneas no contiene información de color, así que el modelo tiende a generar marrones o tonos apagados.
-
----
-
-## Limitaciones
-
-- Un solo entrenamiento, con un solo juego de hiperparámetros; no se probaron variantes.
-- Los bosquejos los genera Canny. No se probó con dibujos hechos a mano, así que el resultado con ellos puede ser peor.
-- Validación limitada a 100 imágenes del mismo dataset; no se usó FID ni evaluación con personas.
-- Las métricas y la demo usan `training=True` (dropout activo, como en el tutorial de Pix2Pix), por lo que los resultados varían un poco entre ejecuciones.
-- El entrenamiento no fija semilla aleatoria, por lo que repetirlo no da números idénticos.
-- No se revisó si hay fotos casi idénticas entre train y test.
-
----
-
-## Referencias
-
-- Isola et al., *Image-to-Image Translation with Conditional Adversarial Networks* (Pix2Pix), 2017.
-- [Tutorial de Pix2Pix de TensorFlow](https://www.tensorflow.org/tutorials/generative/pix2pix), en el que se basa la arquitectura.
-- [UT Zappos50K](https://vision.cs.utexas.edu/projects/finegrained/utzap50k/), dataset de fotos de zapatos.
+Si el modelo ya está entrenado, se puede ir directamente a la demostración utilizando los pesos guardados.
