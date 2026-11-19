@@ -1,5 +1,9 @@
 # Bosquejo a Imagen
 
+Archivo pares.zip: https://drive.google.com/drive/folders/1bw8UdkC-Fo-0d2DkEVfvrKDvFil_Jesh?usp=sharing
+Link collab de entrenamieno y validación: https://colab.research.google.com/drive/14hIf0qaXkEfg3stnjZBDzUDijcWPpEXf?usp=sharing
+Link Dataset: https://vision.cs.utexas.edu/projects/finegrained/utzap50k/
+
 Proyecto de modelos generativos basado en **Pix2Pix**, cuyo objetivo es transformar bocetos en imágenes realistas mediante una arquitectura de redes neuronales compuesta por un generador U-Net y un discriminador PatchGAN.
 
 ## 1. Estructura del proyecto
