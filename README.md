@@ -6,17 +6,6 @@ Modelo generativo que convierte un **bosquejo de líneas** en la **foto de una b
 
 ---
 
-## Integrantes y aportes
-
-| Integrante | Usuario de GitHub | Aporte |
-|---|---|---|
-| _Nombre 1_ | _@usuario_ | _Ej: `01-crear-dataset.py`, preprocesamiento_ |
-| _Nombre 2_ | _@usuario_ | _Ej: `modelo.py`, arquitectura U-Net / PatchGAN_ |
-| _Nombre 3_ | _@usuario_ | _Ej: `04-entrenar.py`, entrenamiento en Colab_ |
-| _Nombre 4_ | _@usuario_ | _Ej: `05-validar.py`, `demo.py`, métricas y análisis_ |
-
----
-
 ## Archivos pesados (Google Drive)
 
 GitHub no admite archivos de más de 100 MB, por eso estos archivos están en Drive:
