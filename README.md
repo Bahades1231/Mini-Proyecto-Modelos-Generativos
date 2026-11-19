@@ -10,11 +10,10 @@ Modelo generativo que convierte un **bosquejo de líneas** en la **foto de una b
 
 GitHub no admite archivos de más de 100 MB, por eso estos archivos están en Drive:
 
-- **Dataset de pares boceto/foto (`pares.zip`):** [ENLACE AQUÍ]()
-- **Modelo entrenado (`generador.keras` y pesos `generador.weights.h5`):** [ENLACE AQUÍ]()
-- **Carpeta `resultados` completa (checkpoints, muestras, `perdidas.csv`):** [ENLACE AQUÍ]()
-- **Explicación detallada del código (PDF):** [ENLACE AQUÍ]()
-- **Cuaderno de Colab usado para entrenar:** [ENLACE AQUÍ]()
+- **Dataset de pares boceto/foto (`pares.zip`):** https://drive.google.com/drive/folders/1bw8UdkC-Fo-0d2DkEVfvrKDvFil_Jesh?usp=sharing
+- **Carpeta `bosquejo-a-imagen` completa (checkpoints, muestras, `perdidas.csv`, resultados, curvas y validación):** https://drive.google.com/drive/folders/1nr2pkG2iAFvPv1a3cCx5ZnjzQ_4goVeT?usp=sharing
+- **Cuaderno de Colab usado para entrenar:** https://colab.research.google.com/drive/1YAK9VNaVkata8bEQkIR-X1IgxiwaHIm5?usp=sharing (Importante cambiar las carpetas o dejarlas tal cual como están en cada celda de codigo)
+** NOTA: Si se necesita solamente revisar el modelo, se debe clonar el repositorio y tener las carpetas de data y bosquejo-a-imagen (se descomprimen dentro del repositorio clonado localmente) **
 
 ---
 
@@ -36,12 +35,10 @@ GitHub no admite archivos de más de 100 MB, por eso estos archivos están en Dr
 
 ## Dataset
 
-- Fotos de la categoría **Boots** de [UT Zappos50K](https://vision.cs.utexas.edu/projects/finegrained/utzap50k/) (fotos de catálogo con fondo blanco).
+- Fotos de la categoría **Boots** de [UT Zappos50K](https://vision.cs.utexas.edu/projects/finegrained/utzap50k/).
 - Se eligieron **1000 fotos al azar** (semilla 42), se recortaron al centro y se redujeron a **256×256**.
 - El bosquejo de cada foto se genera con **Canny** (desenfoque gaussiano 5×5, umbrales 50 y 150), con líneas negras sobre fondo blanco.
 - División: **900 pares de entrenamiento** y **100 de prueba**.
-
-> Revisar los términos de uso de UT Zappos50K antes de redistribuir las fotos originales.
 
 ---
 
@@ -75,6 +72,7 @@ python 04-entrenar.py
 ```
 
 Se recomienda hacerlo en **Google Colab con GPU (T4)**: en CPU cada época toma unos 13 a 14 minutos (≈ 9 horas en total), y en Colab unos 2 minutos (≈ 72 minutos en total).
+En tu carpeta de drive donde harás el entrenamiento (si se hace en collab) deben ir los .py de 04-entrenar.py, cargar_datos.py, modelo.py
 
 Los resultados quedan en `resultados/`. Para una prueba rápida, en `04-entrenar.py` usa `EPOCAS = 2` y `PASOS_PRUEBA = 20`.
 
