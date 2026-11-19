@@ -1,0 +1,17 @@
+# Entorno virtual
+venv/
+
+# Archivos temporales de Python y Gradio
+__pycache__/
+*.pyc
+.gradio/
+
+# Dataset y resultados pesados (Drive)
+data/
+bosquejo-a-imagen/
+resultados/
+
+# Archivos pesados
+*.zip
+*.h5
+*.keras
