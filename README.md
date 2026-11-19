@@ -57,7 +57,7 @@ pip install -r requirements.txt
 
 ### 2. Preparar los datos
 
-**Opción A: usar el dataset ya creado.** Descarga `pares.zip` del enlace de Drive y descomprímelo dentro de `data/`, de modo que quede `data/pares/train/` y `data/pares/test/` (cada una con `boceto/` y `foto/`).
+**Opción A: usar el dataset ya creado.** Descarga `pares.zip` del enlace de Drive y descomprímelo y crea la carpeta "data" dentro de `data/` pega pares.zip descomprimida, de modo que quede `data/pares/train/` y `data/pares/test/` (cada una con `boceto/` y `foto/`).
 
 **Opción B: crearlo desde cero.** Descarga UT Zappos50K, copia la carpeta `Boots` a `data/originales/Boots` y ejecuta:
 
